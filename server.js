@@ -72,7 +72,6 @@ wss.on('connection', ws => {
         expires_at: sent_at + LIFETIME_MS,
       };
       messages.set(stored.id, stored);
-      console.log('message from', client.name, ':', stored.text);
 
       broadcast({ type: 'message', ...stored });
       send(ws, { type: 'delivered', id: stored.id, count: clients.size });
