@@ -18,6 +18,15 @@ function broadcast(obj) {
   for (const c of clients) send(c.ws, obj);
 }
 
+// Tell everybody who is online right now: how many, and their names.
+function broadcastPresence() {
+  broadcast({
+    type: 'presence',
+    count: clients.size,
+    members: [...clients].map(c => c.name),
+  });
+}
+
 wss.on('connection', ws => {
   console.log('client connected');
   let client = null;
@@ -36,6 +45,9 @@ wss.on('connection', ws => {
     if (msg.type === 'ping') return send(ws, { type: 'pong' });
 
     if (msg.type === 'join') {
+      if (client) {
+        return send(ws, { type: 'error', code: 'already_joined', message: 'you already joined' });
+      }
       if (msg.protocol !== PROTOCOL) {
         console.log('rejected join: protocol', msg.protocol);
         return send(ws, { type: 'error', code: 'bad_protocol', message: `relay speaks protocol ${PROTOCOL}` });
@@ -46,7 +58,9 @@ wss.on('connection', ws => {
       client = { ws, name: msg.name.trim().slice(0, 30) };
       clients.add(client);
       console.log('joined:', client.name, '| clients now:', clients.size);
-      return send(ws, { type: 'welcome', protocol: PROTOCOL, server_time: Date.now() });
+      send(ws, { type: 'welcome', protocol: PROTOCOL, server_time: Date.now() });
+      broadcastPresence();
+      return;
     }
 
     if (!client) {
@@ -91,6 +105,7 @@ wss.on('connection', ws => {
     if (client) {
       clients.delete(client);
       console.log('left:', client.name, '| clients now:', clients.size);
+      broadcastPresence();
     } else {
       console.log('connection closed before join');
     }
