@@ -56,8 +56,12 @@ Proposed by Sawaira Waheed. Pending agreement at the Day 2 protocol review.
 
 11. STORAGE
     The relay keeps messages in memory only and deletes them at expires_at.
-```
 
+12. PRESENCE (relay -> all joined apps)
+    {"type":"presence","count":3,"members":["Sawaira","Ali","Sara"]}
+    Sent whenever someone joins or leaves. members is in join order.
+    Apps that do not know this type can ignore it.
+```
 ## Notes
 
 - `device_id` is sent by apps but the relay does not use it yet.
